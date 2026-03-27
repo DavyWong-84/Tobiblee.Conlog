@@ -724,8 +724,27 @@ Return ONLY valid JSON, no other text.`;
     if (!r.ok) { const e = await r.json(); throw new Error(e.error?.message || 'HTTP ' + r.status); }
     const d = await r.json();
     let raw = d.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('').trim();
-    raw = raw.replace(/```json|```/g, '').trim();
-    const data = JSON.parse(raw);
+
+    // Clean up response - remove markdown, extract JSON object
+    raw = raw.replace(/```json/gi, '').replace(/```/g, '').trim();
+
+    // Find the JSON object boundaries
+    const jsonStart = raw.indexOf('{');
+    const jsonEnd = raw.lastIndexOf('}');
+    if (jsonStart === -1 || jsonEnd === -1) throw new Error('No JSON found in response');
+    raw = raw.substring(jsonStart, jsonEnd + 1);
+
+    // Fix common JSON issues - remove trailing commas, fix line breaks inside strings
+    raw = raw.replace(/,\s*}/g, '}').replace(/,\s*]/g, ']');
+
+    let data;
+    try {
+      data = JSON.parse(raw);
+    } catch(parseErr) {
+      // Salvage: strip all newlines and tabs from raw JSON string
+      raw = raw.replace(/[\r\n\t]/g, ' ').replace(/ {2,}/g, ' ');
+      data = JSON.parse(raw);
+    }
 
     // Map JSON fields to note field IDs
     const mapping = {
