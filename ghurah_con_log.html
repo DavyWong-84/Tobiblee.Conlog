@@ -202,10 +202,7 @@
         <span style="font-size:9px;opacity:0.5;">▾</span>
       </button>
       <div id="modelPicker" style="display:none;position:absolute;top:40px;right:0;background:var(--surface);border:1px solid var(--border);border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,0.1);overflow:hidden;z-index:200;min-width:180px;">
-        <div onclick="pickModel('gemini-3.1-pro-preview')" style="padding:10px 14px;font-size:12px;font-family:'DM Mono',monospace;cursor:pointer;display:flex;align-items:center;gap:8px;color:var(--text);" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='transparent'">
-          <span style="width:7px;height:7px;border-radius:50%;background:#5b2d8e;flex-shrink:0;"></span>gemini-3-pro
-          <span style="margin-left:auto;font-size:10px;background:#f0eafb;color:#5b2d8e;padding:1px 6px;border-radius:4px;">Newest</span>
-        </div>
+
         <div onclick="pickModel('gemini-2.5-pro')" style="padding:10px 14px;font-size:12px;font-family:'DM Mono',monospace;cursor:pointer;display:flex;align-items:center;gap:8px;color:var(--text);" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='transparent'">
           <span style="width:7px;height:7px;border-radius:50%;background:#8b2020;flex-shrink:0;"></span>gemini-2.5-pro
           <span style="margin-left:auto;font-size:10px;background:#fdeaea;color:#8b2020;padding:1px 6px;border-radius:4px;">Best</span>
@@ -248,8 +245,15 @@
       <div id="previewCount-new" class="preview-count" style="display:none;"></div>
     </div>
 
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:0.75rem;">
+      <button id="scanBtn-new" onclick="scanPhotos()" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 20px;border:none;border-radius:8px;background:#1a4a7a;color:#fff;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:all 0.15s;" onmouseover="this.style.background='#143a62'" onmouseout="this.style.background='#1a4a7a'">
+        🔍 Scan Photos
+      </button>
+      <span class="badge badge-idle" id="scanBadge">Upload photos first</span>
+    </div>
+
     <div class="card" style="border-top:3px solid var(--accent);">
-      <div class="card-title">Clinical Notes <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text3);font-size:11px;">speak or type each field</span></div>
+      <div class="card-title">Clinical Notes <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text3);font-size:11px;">auto-filled from scan · edit if needed</span></div>
       <div id="noteFields-new"></div>
     </div>
 
@@ -372,9 +376,8 @@ let lastLog = { new: '', existing: '' };
 let records = JSON.parse(localStorage.getItem('conlog_records') || '[]');
 
 const GEMINI_MODELS = [
-  { id: 'gemini-3.1-pro-preview', label: 'gemini-3-pro',        desc: 'Most powerful — latest Gemini 3',  badge: 'new',  badgeLabel: 'Newest' },
-  { id: 'gemini-2.5-pro',              label: 'gemini-2.5-pro',       desc: 'Most accurate for photo scanning', badge: 'new',  badgeLabel: 'Best' },
-  { id: 'gemini-2.5-flash-lite',       label: 'gemini-2.5-flash-lite',desc: 'Lightest & most cost-efficient',   badge: 'fast', badgeLabel: 'Cheapest' },
+  { id: 'gemini-2.5-pro',        label: 'gemini-2.5-pro',        desc: 'Most accurate for photo scanning', badge: 'new',  badgeLabel: 'Best' },
+  { id: 'gemini-2.5-flash-lite', label: 'gemini-2.5-flash-lite', desc: 'Lightest & most cost-efficient',   badge: 'fast', badgeLabel: 'Cheapest' },
 ];
 
 const DEFAULT_PROMPT = `You are a professional sinus therapist specialized in Tobib Lee Sinusitis Therapy. Your task is to transform patient registration and assessment forms/photos into a structured CON LOG clinical treatment record.
@@ -474,7 +477,7 @@ function renderModelGrid() {
   const current = localStorage.getItem('conlog_gemini_model') || 'gemini-2.5-flash';
   const lbl = document.getElementById('modelLabel');
   if (lbl) lbl.textContent = current;
-  const dots = { 'gemini-3.1-pro-preview': '#5b2d8e', 'gemini-2.5-pro': '#8b2020', 'gemini-2.5-flash': '#1a73e8', 'gemini-2.5-flash-lite': '#2c5f4a' };
+  const dots = { 'gemini-2.5-pro': '#8b2020', 'gemini-2.5-flash': '#1a73e8', 'gemini-2.5-flash-lite': '#2c5f4a' };
   const dot = document.querySelector('#modelPickerWrap button span:first-child');
   if (dot) dot.style.background = dots[current] || '#1a73e8';
 }
@@ -660,6 +663,98 @@ function copyLog(side) {
   });
 }
 
+async function scanPhotos() {
+  if (!images['new'].length) {
+    alert('Please upload at least one photo first.');
+    return;
+  }
+  const key = localStorage.getItem('conlog_gemini_key') || '';
+  if (!key) {
+    alert('Gemini API key not set. Go to Settings first.');
+    return;
+  }
+
+  const scanBadge = document.getElementById('scanBadge');
+  const scanBtn = document.getElementById('scanBtn-new');
+  scanBadge.className = 'badge badge-loading';
+  scanBadge.innerHTML = '<span class="spinner"></span> Scanning...';
+  scanBtn.disabled = true;
+
+  const model = currentModel();
+  const sys = `You are a professional sinus therapist. Analyze the patient registration form in the photo and extract information for each field below.
+Return a JSON object with EXACTLY these keys. Use only information visible in the photo. If a field is not found, use empty string "".
+{
+  "problem": "patient's main complaints/problems",
+  "lifestyle": "lifestyle information (air-con, dusty environment, etc)",
+  "medical": "medical history",
+  "left_nasal": "left nasal cavity condition",
+  "left_turbinate": "left turbinate color/condition",
+  "left_swelling": "left swelling percentage/degree",
+  "left_septum": "left septum mucosa condition",
+  "left_breathing": "left breathing condition",
+  "right_nasal": "right nasal cavity condition",
+  "right_turbinate": "right turbinate color/condition",
+  "right_swelling": "right swelling percentage/degree",
+  "right_septum": "right septum mucosa condition",
+  "right_breathing": "right breathing condition",
+  "ear": "ear condition",
+  "fmo": "FMO condition",
+  "mucus": "mucus color/thickness/amount",
+  "after_check": "condition after checking",
+  "sneezing": "sneezing frequency (None/Mild/Moderate/Frequent)",
+  "mucus_therapy": "mucus during therapy",
+  "after_therapy": "condition after therapy",
+  "suggestion": "suggestions/recommendations",
+  "next_session": "next session timing"
+}
+Return ONLY valid JSON, no other text.`;
+
+  try {
+    const imgParts = images['new'].map(img => ({ inline_data: { mime_type: img.mime, data: img.base64 } }));
+    const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent?key=' + key, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        system_instruction: { parts: [{ text: sys }] },
+        contents: [{ role: 'user', parts: [...imgParts, { text: 'Extract the patient form data and return as JSON.' }] }],
+        generationConfig: { maxOutputTokens: 1000, temperature: 0.1 }
+      })
+    });
+
+    if (!r.ok) { const e = await r.json(); throw new Error(e.error?.message || 'HTTP ' + r.status); }
+    const d = await r.json();
+    let raw = d.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('').trim();
+    raw = raw.replace(/```json|```/g, '').trim();
+    const data = JSON.parse(raw);
+
+    // Map JSON fields to note field IDs
+    const mapping = {
+      'note-problem-new':    data.problem || '',
+      'note-lifestyle-new':  data.lifestyle || '',
+      'note-medical-new':    data.medical || '',
+      'note-left-new':       [data.left_nasal, data.left_turbinate, data.left_swelling, data.left_septum, data.left_breathing].filter(Boolean).join(', '),
+      'note-right-new':      [data.right_nasal, data.right_turbinate, data.right_swelling, data.right_septum, data.right_breathing].filter(Boolean).join(', '),
+      'note-checking-new':   [data.ear ? 'Ear: '+data.ear : '', data.fmo ? 'FMO: '+data.fmo : '', data.mucus ? 'Mucus: '+data.mucus : '', data.after_check ? 'After check: '+data.after_check : ''].filter(Boolean).join(', '),
+      'note-therapy-new':    [data.sneezing ? 'Sneezing: '+data.sneezing : '', data.mucus_therapy ? 'Mucus: '+data.mucus_therapy : '', data.after_therapy ? 'After therapy: '+data.after_therapy : ''].filter(Boolean).join(', '),
+      'note-suggestion-new': data.suggestion || '',
+      'note-next-new':       data.next_session || '',
+    };
+
+    let filled = 0;
+    for (const [id, val] of Object.entries(mapping)) {
+      const el = document.getElementById(id);
+      if (el && val) { el.value = val; filled++; }
+    }
+
+    scanBadge.className = 'badge badge-success';
+    scanBadge.innerHTML = '✓ ' + filled + ' fields filled — review & edit before generating';
+  } catch(e) {
+    scanBadge.className = 'badge badge-error';
+    scanBadge.innerHTML = '✕ Scan failed: ' + e.message;
+  }
+  scanBtn.disabled = false;
+}
+
 function autoSaveRecord(side, log) {
   if (!log) return;
   const icMatch = log.match(/\b(\d{6}-\d{2}-\d{4})\b/);
@@ -790,7 +885,7 @@ function toggleModelPicker() {
 function pickModel(id) {
   localStorage.setItem('conlog_gemini_model', id);
   document.getElementById('modelLabel').textContent = id;
-  const dots = { 'gemini-3.1-pro-preview': '#5b2d8e', 'gemini-2.5-pro': '#8b2020', 'gemini-2.5-flash': '#1a73e8', 'gemini-2.5-flash-lite': '#2c5f4a' };
+  const dots = { 'gemini-2.5-pro': '#8b2020', 'gemini-2.5-flash': '#1a73e8', 'gemini-2.5-flash-lite': '#2c5f4a' };
   document.querySelector('#modelPickerWrap button span:first-child').style.background = dots[id] || '#1a73e8';
   document.getElementById('modelPicker').style.display = 'none';
   renderModelGrid();
