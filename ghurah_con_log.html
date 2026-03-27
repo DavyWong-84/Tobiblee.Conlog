@@ -217,21 +217,7 @@
       </div>
     </div>
 
-    <div id="settingsMenu" style="display:none;position:fixed;top:72px;right:12px;width:480px;max-height:85vh;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:0 4px 24px rgba(0,0,0,0.15);z-index:999;padding:1.25rem;">
-      <div style="font-size:11px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:var(--text3);margin-bottom:10px;">Gemini API Key</div>
-      <div style="font-size:12px;color:var(--accent-text);background:var(--accent-light);border:1px solid #b0d8c8;border-radius:6px;padding:8px 10px;margin-bottom:10px;">Get key at <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--accent-text);font-weight:500;">aistudio.google.com</a></div>
-      <div style="display:flex;gap:8px;margin-bottom:4px;">
-        <input type="password" id="geminiKey" placeholder="AIzaSy..." autocomplete="off" style="flex:1;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:'DM Mono',monospace;font-size:12px;background:var(--surface);color:var(--text);outline:none;">
-        <button onclick="saveKey()" style="padding:8px 14px;border:1px solid var(--border2);border-radius:6px;background:var(--surface);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;">Save</button>
-      </div>
-      <div id="keyStatus" style="font-size:11px;color:var(--text3);min-height:14px;margin-bottom:12px;"></div>
-      <div style="font-size:11px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:var(--text3);margin-bottom:8px;">CON LOG Prompt</div>
-      <textarea id="systemPromptInput" style="width:100%;min-height:300px;font-family:'DM Mono',monospace;font-size:12px;line-height:1.7;padding:10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);resize:vertical;outline:none;"></textarea>
-      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px;">
-        <button onclick="resetPrompt()" style="padding:6px 12px;border:1px solid var(--border2);border-radius:6px;background:var(--surface);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;">Reset</button>
-        <button onclick="savePrompt()" style="padding:6px 12px;border:1px solid var(--border2);border-radius:6px;background:var(--surface);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;">Save Prompt</button>
-      </div>
-    </div>
+
   </div>
 </div>
 
@@ -340,7 +326,7 @@
   <div id="tab-settings" class="tab-panel">
     <div class="card">
       <div class="card-title">Gemini API Key</div>
-      <div style="font-size:12px;color:var(--accent-text);background:var(--accent-light);border:1px solid #b0d8c8;border-radius:6px;padding:8px 10px;margin-bottom:10px;">Get key at <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--accent-text);font-weight:500;">aistudio.google.com</a></div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:8px;">Get key at <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--blue);">aistudio.google.com</a></div>
       <div class="field">
         <label>API Key</label>
         <div style="display:flex;gap:8px;">
@@ -349,6 +335,15 @@
         </div>
         <div id="keyStatus" class="api-status"></div>
       </div>
+      <div class="field" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
+        <label>GitHub Token <span style="font-weight:400;color:var(--text3);">(for cloud prompt sync)</span></label>
+        <div style="display:flex;gap:8px;">
+          <input type="password" id="githubToken" placeholder="ghp_..." autocomplete="off">
+          <button onclick="saveGithubToken()" class="btn btn-outline">Save</button>
+        </div>
+        <div id="tokenStatus" class="api-status"></div>
+        <div style="font-size:11px;color:var(--text3);margin-top:4px;">Get token at <a href="https://github.com/settings/tokens" target="_blank" style="color:var(--blue);">github.com/settings/tokens</a> → tick <strong>gist</strong></div>
+      </div>
     </div>
     <div class="card">
       <div class="card-title">CON LOG System Prompt</div>
@@ -356,8 +351,7 @@
         <label>Clinical role instructions sent to Gemini on every session</label>
         <textarea id="systemPromptInput" style="min-height:320px;font-family:'DM Mono',monospace;font-size:12px;line-height:1.7;"></textarea>
       </div>
-      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:10px;">
-        <button class="btn btn-outline" onclick="resetPrompt()">Reset to Default</button>
+      <div style="display:flex;justify-content:flex-end;margin-top:10px;">
         <button class="btn btn-outline" onclick="savePrompt()">Save Prompt</button>
       </div>
     </div>
@@ -447,8 +441,18 @@ Mucus: describe color, thickness, amount`;
 
 // ── Init ─────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('systemPromptInput').value = localStorage.getItem('conlog_systemprompt') || DEFAULT_PROMPT;
+  // Try loading prompt from Gist, fallback to local
+  loadPromptFromGist().then(loaded => {
+    if (!loaded) {
+      document.getElementById('systemPromptInput').value = localStorage.getItem('conlog_systemprompt') || DEFAULT_PROMPT;
+    }
+  });
   const k = localStorage.getItem('conlog_gemini_key') || '';
+  const gt = localStorage.getItem('conlog_github_token') || '';
+  if (gt) {
+    const gtEl = document.getElementById('githubToken');
+    if (gtEl) { gtEl.value = gt; document.getElementById('tokenStatus').textContent = '✓ Token loaded'; document.getElementById('tokenStatus').className = 'api-status ok'; }
+  }
   if (k) {
     document.getElementById('geminiKey').value = k;
     document.getElementById('keyStatus').textContent = '✓ Key loaded';
@@ -741,7 +745,11 @@ function saveKey() {
 function savePrompt() {
   const p = document.getElementById('systemPromptInput').value.trim();
   if (!p) { alert('Prompt cannot be empty.'); return; }
-  localStorage.setItem('conlog_systemprompt', p); alert('System prompt saved.');
+  localStorage.setItem('conlog_systemprompt', p);
+  savePromptToGist(p).then(ok => {
+    if (ok) alert('✓ Prompt saved and synced to cloud!');
+    else alert('✓ Prompt saved locally. (Cloud sync: set GitHub token in Settings)');
+  });
 }
 
 function toggleModelPicker() {
@@ -781,6 +789,70 @@ document.addEventListener('click', function(e) {
     if (!btn && !menuEl) menu.style.display = 'none';
   }
 });
+
+function saveGithubToken() {
+  const t = document.getElementById('githubToken').value.trim();
+  if (!t) { alert('Please enter your GitHub token.'); return; }
+  localStorage.setItem('conlog_github_token', t);
+  const s = document.getElementById('tokenStatus');
+  s.textContent = '✓ Token saved'; s.className = 'api-status ok';
+  setTimeout(() => { s.textContent = ''; s.className = 'api-status'; }, 3000);
+}
+
+// ── Gist Sync ────────────────────────────────────────────
+const GIST_ID = 'bdf67e829435a345e3d0246af7a4250b';
+const GIST_FILE = 'prompt.txt';
+
+async function loadPromptFromGist() {
+  try {
+    // Use GitHub API with token if available (avoids rate limits)
+    const token = localStorage.getItem('conlog_github_token') || '';
+    const headers = { 'Accept': 'application/vnd.github.v3+json' };
+    if (token) headers['Authorization'] = 'token ' + token;
+
+    const r = await fetch('https://api.github.com/gists/' + GIST_ID, { headers });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const d = await r.json();
+
+    // Find the file (try exact name first, then first file)
+    const fileObj = d.files?.[GIST_FILE] || Object.values(d.files || {})[0];
+    const prompt = fileObj?.content;
+
+    if (prompt) {
+      localStorage.setItem('conlog_systemprompt', prompt);
+      const el = document.getElementById('systemPromptInput');
+      if (el) el.value = prompt;
+      console.log('Prompt loaded from Gist:', fileObj.filename);
+      return true;
+    }
+  } catch(e) {
+    console.log('Gist load failed, using local:', e.message);
+  }
+  return false;
+}
+
+async function savePromptToGist(prompt) {
+  const token = localStorage.getItem('conlog_github_token') || '';
+  if (!token) {
+    alert('GitHub token not set. Go to Settings → enter your GitHub token to enable cloud sync.');
+    return false;
+  }
+  try {
+    const r = await fetch('https://api.github.com/gists/' + GIST_ID, {
+      method: 'PATCH',
+      headers: {
+        'Accept': 'application/vnd.github.v3+json',
+        'Authorization': 'token ' + token,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ files: { [GIST_FILE]: { content: prompt } } })
+    });
+    return r.ok;
+  } catch(e) {
+    console.log('Gist save failed:', e.message);
+    return false;
+  }
+}
 
 function resetPrompt() {
   if (!confirm('Reset to default prompt?')) return;
