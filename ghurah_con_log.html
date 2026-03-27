@@ -261,7 +261,7 @@
           <span id="resultMeta-new">—</span>
           <div style="display:flex;gap:6px;">
             <button class="btn btn-outline btn-sm" id="copyBtn-new" onclick="copyLog('new')" style="display:none;">Copy</button>
-            <button class="btn btn-outline btn-sm" id="saveBtn-new" onclick="saveRecord('new')" style="display:none;">Save to Archive</button>
+            
           </div>
         </div>
         <div class="result-body" id="resultBody-new"><span class="result-placeholder">CON LOG will appear here after generation...</span></div>
@@ -297,7 +297,7 @@
           <span id="resultMeta-existing">—</span>
           <div style="display:flex;gap:6px;">
             <button class="btn btn-outline btn-sm" id="copyBtn-existing" onclick="copyLog('existing')" style="display:none;">Copy</button>
-            <button class="btn btn-outline btn-sm" id="saveBtn-existing" onclick="saveRecord('existing')" style="display:none;">Save to Archive</button>
+            
           </div>
         </div>
         <div class="result-body" id="resultBody-existing"><span class="result-placeholder">CON LOG will appear here after generation...</span></div>
@@ -584,7 +584,6 @@ async function generateLog(side) {
   document.getElementById('resultBody-' + side).innerHTML = '<span class="result-placeholder">Generating CON LOG — please wait...</span>';
   document.getElementById('resultMeta-' + side).textContent = 'Processing...';
   document.getElementById('copyBtn-' + side).style.display = 'none';
-  document.getElementById('saveBtn-' + side).style.display = 'none';
 
   const sys = localStorage.getItem('conlog_systemprompt') || DEFAULT_PROMPT;
   const fieldKeys = ['problem','lifestyle','medical','left','right','checking','therapy','suggestion','next'];
@@ -640,8 +639,8 @@ async function generateLog(side) {
     document.getElementById('resultBody-' + side).textContent = log;
     document.getElementById('resultMeta-' + side).textContent = new Date().toLocaleTimeString() + ' · ' + model + ' · ' + (images[side]||[]).length + ' photo' + ((images[side]||[]).length !== 1 ? 's' : '');
     document.getElementById('copyBtn-' + side).style.display = 'inline-flex';
-    document.getElementById('saveBtn-' + side).style.display = 'inline-flex';
-    setBadge('success', 'CON LOG generated', side);
+    autoSaveRecord(side, log);
+    setBadge('success', 'CON LOG generated & saved', side);
   } catch(e) {
     document.getElementById('resultBody-' + side).innerHTML = '<span style="color:var(--red);">Error: ' + e.message + '</span>';
     document.getElementById('resultMeta-' + side).textContent = 'Failed';
@@ -655,6 +654,33 @@ function copyLog(side) {
   navigator.clipboard.writeText(lastLog[side]).then(() => {
     const b = document.getElementById('copyBtn-' + side); b.textContent = 'Copied!'; setTimeout(() => b.textContent = 'Copy', 2000);
   });
+}
+
+function autoSaveRecord(side, log) {
+  if (!log) return;
+  const icMatch = log.match(/\b(\d{6}-\d{2}-\d{4})\b/);
+  const ic = icMatch ? icMatch[1] : '-';
+  const nameMatch = log.match(/Patient Name[^:\n]*:\s*([^\n\r]+)/i);
+  const name = nameMatch ? nameMatch[1].trim() : (ic !== '-' ? ic : 'Unknown');
+  const now = Date.now();
+  const twentyFourHours = 24 * 60 * 60 * 1000;
+
+  // Remove existing record with same IC if within 24 hours
+  if (ic && ic !== '-') {
+    records = records.filter(r => {
+      if (r.ic !== ic) return true;
+      // Keep if older than 24 hours
+      return (now - r.id) > twentyFourHours;
+    });
+  }
+
+  records.unshift({
+    id: now, name, ic, sessionType: side, model: currentModel(),
+    date: new Date().toLocaleDateString('en-MY', { day:'2-digit', month:'short', year:'numeric' }),
+    time: new Date().toLocaleTimeString('en-MY', { hour:'2-digit', minute:'2-digit' }),
+    photoCount: (images[side]||[]).length, log
+  });
+  localStorage.setItem('conlog_records', JSON.stringify(records));
 }
 
 function saveRecord(side) {
@@ -822,11 +848,11 @@ async function loadPromptFromGist() {
       localStorage.setItem('conlog_systemprompt', prompt);
       const el = document.getElementById('systemPromptInput');
       if (el) el.value = prompt;
-      console.log('Prompt loaded from Gist:', fileObj.filename);
+      
       return true;
     }
   } catch(e) {
-    console.log('Gist load failed, using local:', e.message);
+    // Gist unavailable, using local storage
   }
   return false;
 }
@@ -849,7 +875,7 @@ async function savePromptToGist(prompt) {
     });
     return r.ok;
   } catch(e) {
-    console.log('Gist save failed:', e.message);
+    
     return false;
   }
 }
