@@ -202,7 +202,7 @@
         <span style="font-size:9px;opacity:0.5;">▾</span>
       </button>
       <div id="modelPicker" style="display:none;position:absolute;top:40px;right:0;background:var(--surface);border:1px solid var(--border);border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,0.1);overflow:hidden;z-index:200;min-width:180px;">
-        <div onclick="pickModel('gemini-3-pro-preview-11-2025')" style="padding:10px 14px;font-size:12px;font-family:'DM Mono',monospace;cursor:pointer;display:flex;align-items:center;gap:8px;color:var(--text);" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='transparent'">
+        <div onclick="pickModel('gemini-3.1-pro-preview')" style="padding:10px 14px;font-size:12px;font-family:'DM Mono',monospace;cursor:pointer;display:flex;align-items:center;gap:8px;color:var(--text);" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='transparent'">
           <span style="width:7px;height:7px;border-radius:50%;background:#5b2d8e;flex-shrink:0;"></span>gemini-3-pro
           <span style="margin-left:auto;font-size:10px;background:#f0eafb;color:#5b2d8e;padding:1px 6px;border-radius:4px;">Newest</span>
         </div>
@@ -239,6 +239,10 @@
         <div class="upload-text">Click to upload patient registration photos</div>
         <div class="upload-sub">Patient name will be read from the form — no manual entry needed</div>
         <div class="upload-sub" style="margin-top:4px;">JPG / PNG · Multiple files · Drag & drop</div>
+        <div style="margin-top:8px;font-size:11px;color:var(--text3);text-align:left;line-height:1.8;">
+          💰 Gemini 2.5 Pro ~RM0.04/Photo<br>
+          💰 Gemini 2.5 Flash-Lite ~RM0.004/Photo
+        </div>
       </div>
       <div class="preview-grid" id="previewGrid-new"></div>
       <div id="previewCount-new" class="preview-count" style="display:none;"></div>
@@ -368,7 +372,7 @@ let lastLog = { new: '', existing: '' };
 let records = JSON.parse(localStorage.getItem('conlog_records') || '[]');
 
 const GEMINI_MODELS = [
-  { id: 'gemini-3-pro-preview-11-2025', label: 'gemini-3-pro',        desc: 'Most powerful — latest Gemini 3',  badge: 'new',  badgeLabel: 'Newest' },
+  { id: 'gemini-3.1-pro-preview', label: 'gemini-3-pro',        desc: 'Most powerful — latest Gemini 3',  badge: 'new',  badgeLabel: 'Newest' },
   { id: 'gemini-2.5-pro',              label: 'gemini-2.5-pro',       desc: 'Most accurate for photo scanning', badge: 'new',  badgeLabel: 'Best' },
   { id: 'gemini-2.5-flash-lite',       label: 'gemini-2.5-flash-lite',desc: 'Lightest & most cost-efficient',   badge: 'fast', badgeLabel: 'Cheapest' },
 ];
@@ -470,7 +474,7 @@ function renderModelGrid() {
   const current = localStorage.getItem('conlog_gemini_model') || 'gemini-2.5-flash';
   const lbl = document.getElementById('modelLabel');
   if (lbl) lbl.textContent = current;
-  const dots = { 'gemini-3-pro-preview-11-2025': '#5b2d8e', 'gemini-2.5-pro': '#8b2020', 'gemini-2.5-flash': '#1a73e8', 'gemini-2.5-flash-lite': '#2c5f4a' };
+  const dots = { 'gemini-3.1-pro-preview': '#5b2d8e', 'gemini-2.5-pro': '#8b2020', 'gemini-2.5-flash': '#1a73e8', 'gemini-2.5-flash-lite': '#2c5f4a' };
   const dot = document.querySelector('#modelPickerWrap button span:first-child');
   if (dot) dot.style.background = dots[current] || '#1a73e8';
 }
@@ -786,7 +790,7 @@ function toggleModelPicker() {
 function pickModel(id) {
   localStorage.setItem('conlog_gemini_model', id);
   document.getElementById('modelLabel').textContent = id;
-  const dots = { 'gemini-3-pro-preview-11-2025': '#5b2d8e', 'gemini-2.5-pro': '#8b2020', 'gemini-2.5-flash': '#1a73e8', 'gemini-2.5-flash-lite': '#2c5f4a' };
+  const dots = { 'gemini-3.1-pro-preview': '#5b2d8e', 'gemini-2.5-pro': '#8b2020', 'gemini-2.5-flash': '#1a73e8', 'gemini-2.5-flash-lite': '#2c5f4a' };
   document.querySelector('#modelPickerWrap button span:first-child').style.background = dots[id] || '#1a73e8';
   document.getElementById('modelPicker').style.display = 'none';
   renderModelGrid();
