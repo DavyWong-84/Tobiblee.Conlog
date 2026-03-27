@@ -119,6 +119,70 @@
   .badge-new { background: #e8f0f8; color: #1a4a7a; }
   .badge-stable { background: var(--surface2); color: var(--text2); }
   .badge-fast { background: var(--accent-light); color: var(--accent-text); }
+
+  /* ── Mobile Responsive ─────────────────────────────── */
+  @media (max-width: 600px) {
+    .topbar { padding: 0 1rem; height: 56px; }
+    .topbar-title { font-size: 14px; }
+    #modelPickerWrap button { font-size: 10px; padding: 5px 10px; }
+    #modelPicker { min-width: 160px; right: -40px; }
+
+    .main { padding: 0.75rem 0.75rem; }
+
+    .card { padding: 1rem; border-radius: 10px; margin-bottom: 0.75rem; }
+    .card-title { font-size: 9px; margin-bottom: 0.75rem; }
+
+    .upload-zone { padding: 1.25rem 1rem; }
+    .upload-icon { font-size: 24px; margin-bottom: 6px; }
+    .upload-text { font-size: 13px; }
+    .upload-sub { font-size: 11px; }
+
+    .field label { font-size: 11px; }
+    .field input, .field select, .field textarea { font-size: 13px; padding: 8px 10px; }
+
+    .btn { font-size: 13px; padding: 9px 16px; }
+    .btn-outline { font-size: 12px; padding: 7px 12px; }
+    .btn-sm { font-size: 11px; padding: 5px 10px; }
+
+    .action-row { gap: 8px; }
+    .action-row .btn-primary { font-size: 13px; }
+
+    .result-body { font-size: 12px; padding: 1rem; line-height: 1.7; }
+    .result-toolbar { padding: 6px 10px; }
+    .result-toolbar span { font-size: 10px; }
+
+    .badge { font-size: 11px; padding: 3px 8px; }
+
+    .record-name { font-size: 13px; }
+    .record-meta { font-size: 10px; }
+    .record-log { font-size: 11px; padding: 0.75rem 1rem; }
+
+    /* Note fields mic button */
+    #noteFields-new > div, #noteFields-existing > div { margin-bottom: 8px; }
+
+    /* Archive search */
+    #archiveSearch { font-size: 13px; }
+
+    /* Settings menu */
+    #settingsMenu { width: calc(100vw - 24px); right: 0; left: 0; margin: 0 12px; font-size: 13px; }
+    #settingsMenu textarea { min-height: 200px; font-size: 11px; }
+    #settingsMenu input { font-size: 13px; }
+
+    /* Tab bar */
+    .tabs-bar button { font-size: 12px; padding: 8px 6px; }
+
+    /* Preview grid smaller on mobile */
+    .preview-grid { grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); gap: 6px; }
+
+    /* IC input */
+    #existingIC { font-size: 15px; }
+
+    /* Voice status text */
+    [id^="status-"] { font-size: 10px; }
+
+    /* Topbar ⋮ button */
+    #settingsMenu { top: 60px; }
+  }
 </style>
 </head>
 <body>
