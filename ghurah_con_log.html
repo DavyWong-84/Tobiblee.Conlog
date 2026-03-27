@@ -216,7 +216,7 @@
         </div>
       </div>
     </div>
-    <button onclick="toggleMenu()" style="width:36px;height:36px;border-radius:50%;border:none;background:#eef1f4;cursor:pointer;font-size:20px;display:flex;align-items:center;justify-content:center;color:#1a2433;transition:background 0.15s;" onmouseover="this.style.background='#e0e6ed'" onmouseout="this.style.background='#eef1f4'">⋮</button>
+
     <div id="settingsMenu" style="display:none;position:fixed;top:72px;right:12px;width:480px;max-height:85vh;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:0 4px 24px rgba(0,0,0,0.15);z-index:999;padding:1.25rem;">
       <div style="font-size:11px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:var(--text3);margin-bottom:10px;">Gemini API Key</div>
       <div style="font-size:12px;color:var(--accent-text);background:var(--accent-light);border:1px solid #b0d8c8;border-radius:6px;padding:8px 10px;margin-bottom:10px;">Get key at <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--accent-text);font-weight:500;">aistudio.google.com</a></div>
@@ -237,9 +237,10 @@
 
 <div class="main">
   <div style="position:sticky;top:64px;z-index:90;background:var(--bg);padding:8px 0;margin-bottom:0.5rem;display:flex;gap:6px;">
-    <button id="tbtn-new" onclick="switchTab('new')" style="flex:1;padding:9px 8px;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:all 0.15s;background:#e8f2ee;color:#1a3d2e;border-bottom:3px solid #2c5f4a;">New Customer</button>
-    <button id="tbtn-existing" onclick="switchTab('existing')" style="flex:1;padding:9px 8px;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:all 0.15s;background:#e8f0f8;color:#1a4a7a;border-bottom:3px solid transparent;opacity:0.7;">Existing Customer</button>
-    <button id="tbtn-archive" onclick="switchTab('archive')" style="flex:1;padding:9px 8px;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:all 0.15s;background:#faeaea;color:#8b2020;border-bottom:3px solid transparent;opacity:0.7;">Record History</button>
+    <button id="tbtn-new" onclick="switchTab('new')" style="flex:1;padding:9px 8px;border:none;border-radius:10px 10px 0 0;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:all 0.15s;background:#e6f4ef;color:#1a3d2e;border-bottom:3px solid #2c5f4a;">New Customer</button>
+    <button id="tbtn-existing" onclick="switchTab('existing')" style="flex:1;padding:9px 8px;border:none;border-radius:10px 10px 0 0;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:all 0.15s;background:#e6f0fb;color:#1a4a7a;border-bottom:3px solid transparent;opacity:0.65;">Existing Customer</button>
+    <button id="tbtn-archive" onclick="switchTab('archive')" style="flex:1;padding:9px 8px;border:none;border-radius:10px 10px 0 0;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:all 0.15s;background:#fdeaea;color:#8b2020;border-bottom:3px solid transparent;opacity:0.65;">Record History</button>
+    <button id="tbtn-settings" onclick="switchTab('settings')" style="flex:1;padding:9px 8px;border:none;border-radius:10px 10px 0 0;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:all 0.15s;background:#f0eafb;color:#5b2d8e;border-bottom:3px solid transparent;opacity:0.65;">Settings</button>
   </div>
 
   <!-- NEW SESSION TAB -->
@@ -335,6 +336,36 @@
   </div>
 
 
+  <!-- SETTINGS TAB -->
+  <div id="tab-settings" class="tab-panel">
+    <div class="card">
+      <div class="card-title">Gemini API Key</div>
+      <div style="font-size:12px;color:var(--accent-text);background:var(--accent-light);border:1px solid #b0d8c8;border-radius:6px;padding:8px 10px;margin-bottom:10px;">Get key at <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--accent-text);font-weight:500;">aistudio.google.com</a></div>
+      <div class="field">
+        <label>API Key</label>
+        <div style="display:flex;gap:8px;">
+          <input type="password" id="geminiKey" placeholder="AIzaSy..." autocomplete="off">
+          <button onclick="saveKey()" class="btn btn-outline">Save</button>
+        </div>
+        <div id="keyStatus" class="api-status"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">CON LOG System Prompt</div>
+      <div class="field">
+        <label>Clinical role instructions sent to Gemini on every session</label>
+        <textarea id="systemPromptInput" style="min-height:320px;font-family:'DM Mono',monospace;font-size:12px;line-height:1.7;"></textarea>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:10px;">
+        <button class="btn btn-outline" onclick="resetPrompt()">Reset to Default</button>
+        <button class="btn btn-outline" onclick="savePrompt()">Save Prompt</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">About</div>
+      <p style="font-size:13px;color:var(--text2);line-height:1.8;">Tobib Lee CON LOG System · Powered by Gemini<br>All records and API keys stored locally in your browser only.</p>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -453,11 +484,12 @@ function currentModel() {
 const TAB_STYLES = {
   new:      { bg: '#e6f4ef', color: '#1a3d2e', border: '#2c5f4a' },
   existing: { bg: '#e6f0fb', color: '#1a4a7a', border: '#1a4a7a' },
-  archive:  { bg: '#fdeaea', color: '#8b2020', border: '#8b2020' }
+  archive:  { bg: '#fdeaea', color: '#8b2020', border: '#8b2020' },
+  settings: { bg: '#f0eafb', color: '#5b2d8e', border: '#5b2d8e' }
 };
 
 function switchTab(tab) {
-  ['new','existing','archive'].forEach(t => {
+  ['new','existing','archive','settings'].forEach(t => {
     const panel = document.getElementById('tab-' + t);
     const btn = document.getElementById('tbtn-' + t);
     if (panel) panel.classList.toggle('active', t === tab);
