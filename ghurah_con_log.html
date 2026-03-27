@@ -352,13 +352,16 @@ AFTER THERAPY: [value]
 
 RULES:
 1. Clinical English only. Be brief and concise.
-2. Use ONLY information from the photos/notes. Do not assume or infer.
-3. Empty fields: write "-".
-4. Extract the IC number from photos if visible. IC format is xxxxxx-xx-xxxx (e.g. 870517-10-5544). Do NOT ask for it.
-5. Output ONLY the CON LOG. No preamble, no explanation.
-6. Do NOT use any asterisks (*) or bullet points anywhere.
-8. ALL section titles and field labels must be in UPPERCASE.
-7. Add ONE blank line between each numbered section. Within a section (e.g. LEFT NOSE fields), no blank lines between the fields.
+2. CLINICAL NOTES ARE HIGHEST PRIORITY. If the therapist has written anything in Clinical Notes, use that information first and treat it as the most accurate data.
+3. Photos/forms are SECONDARY — only use photo content to fill fields that have NO corresponding Clinical Note entry. Photos are a fallback when notes are empty.
+4. If there is ANY conflict between Clinical Notes and photo content, ALWAYS follow the Clinical Notes. The therapist's notes are more reliable than AI photo scanning.
+5. Do NOT infer, assume, or add any information not explicitly present in the notes or photos.
+6. Empty fields with no data from either source: write "-".
+7. Extract IC number from photos if visible. Format: xxxxxx-xx-xxxx. Do NOT ask for it.
+8. Output ONLY the CON LOG. No preamble, no explanation.
+9. Do NOT use any asterisks (*) or bullet points anywhere.
+10. ALL section titles and field labels must be in UPPERCASE.
+11. Add ONE blank line between each numbered section. Within a section, no blank lines between fields.
 
 CLINICAL MAPPING:
 Sneezing: None / Mild (few times) / Moderate (repetitive) / Frequent (unstoppable)
