@@ -856,6 +856,11 @@ Swelling: include % if visible (e.g. 50% swollen)
 Mucus: describe color (clear / yellow / green), thickness (thin / thick), amount (a little / a lot)`;
 
 // ── Init ─────────────────────────────────────────────────
+window.addEventListener('load', () => {
+  // 字体和资源全部载入后，确保 textarea 撑到正确高度
+  document.querySelectorAll('#noteFields-new textarea, #noteFields-existing textarea').forEach(el => autoResize(el));
+});
+
 window.addEventListener('DOMContentLoaded', () => {
   // 恢复 dark mode
   if (localStorage.getItem('conlog_dark') === '1') {
@@ -1107,7 +1112,10 @@ function renderNoteFields() {
   });
   setTimeout(() => {
     restoreDrafts();
-    document.querySelectorAll('textarea').forEach(el => autoResize(el));
+    // 短暂延迟后再 resize，确保 DOM 已 paint
+    setTimeout(() => {
+      document.querySelectorAll('#noteFields-new textarea, #noteFields-existing textarea').forEach(el => autoResize(el));
+    }, 100);
   }, 50);
 }
 
