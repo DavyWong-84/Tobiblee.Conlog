@@ -685,12 +685,31 @@
 
   .api-status { font-size: 11px; color: var(--text3); margin-top: 6px; min-height: 16px; }
   select { -webkit-appearance: none; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238a97a8'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 8px center; padding-right: 24px !important; }
-  @keyframes voicePulse { 0%,100% { box-shadow:0 0 0 0 rgba(192,57,43,0.45); } 50% { box-shadow:0 0 0 10px rgba(192,57,43,0); } }
+  @keyframes voicePulse { 0%,100% { box-shadow:0 0 0 0 rgba(37,99,235,0.45); } 50% { box-shadow:0 0 0 12px rgba(37,99,235,0); } }
   @keyframes voiceDot { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:0.4; transform:scale(0.7); } }
-  #voiceBtn.recording { animation: voicePulse 1.2s ease-in-out infinite; background:#c0392b !important; border-color:#c0392b !important; color:#fff !important; }
+  #voiceBtn.recording { animation: voicePulse 1.2s ease-in-out infinite; background:var(--blue) !important; border-color:var(--blue) !important; color:#fff !important; }
   body.dark #voiceBtn { border-color:#5b9bd5 !important; color:#5b9bd5 !important; }
-  body.dark #voiceBtn.recording { background:#c0392b !important; border-color:#c0392b !important; color:#fff !important; }
+  body.dark #voiceBtn.recording { background:#5b9bd5 !important; border-color:#5b9bd5 !important; color:#0a1525 !important; }
   body.dark #voiceTranscript { background:var(--surface2) !important; color:var(--text3) !important; }
+  /* v6.28 — Voice button waveform bars (visible during recording) */
+  #voiceBtn .voice-wave { display:none; gap:3px; align-items:center; height:32px; }
+  #voiceBtn.recording .voice-wave { display:flex; }
+  #voiceBtn.recording > svg { display:none; }
+  #voiceBtn .voice-wave span {
+    width:3px; background:#fff; border-radius:2px;
+    animation: voiceWave 0.9s ease-in-out infinite;
+  }
+  #voiceBtn .voice-wave span:nth-child(1) { height:14px; animation-delay:0s; }
+  #voiceBtn .voice-wave span:nth-child(2) { height:24px; animation-delay:0.1s; }
+  #voiceBtn .voice-wave span:nth-child(3) { height:18px; animation-delay:0.2s; }
+  #voiceBtn .voice-wave span:nth-child(4) { height:30px; animation-delay:0.3s; }
+  #voiceBtn .voice-wave span:nth-child(5) { height:16px; animation-delay:0.4s; }
+  #voiceBtn .voice-wave span:nth-child(6) { height:22px; animation-delay:0.15s; }
+  #voiceBtn .voice-wave span:nth-child(7) { height:12px; animation-delay:0.25s; }
+  @keyframes voiceWave {
+    0%,100% { transform:scaleY(0.4); }
+    50%     { transform:scaleY(1); }
+  }
   body.dark select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23b0b0b0'/%3E%3C/svg%3E"); }
   @keyframes logoPulse {
     0%, 100% { box-shadow: 0 0 0 0 rgba(44,95,74,0.45); }
@@ -949,8 +968,12 @@
   /* ── Desktop 2-col layout ≥769px ─────────────── */
   @media (min-width: 769px) {
     .desktop-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; align-items: start; }
-    .desktop-right { position: sticky; top: 120px; display: flex; flex-direction: column; gap: 1rem; align-self: start; }
-    .desktop-right .result-body { max-height: calc(100vh - 280px); overflow-y: auto; }
+    .desktop-right { position: sticky; top: 120px; display: flex; flex-direction: column; gap: 1rem; align-self: start; max-height: calc(100vh - 140px); }
+    /* v6.27 — Right column flex layout: photos/voice (auto) + generate (auto) + output (flex:1 fills rest, scrolls inside) */
+    .desktop-right .right-output-card { flex: 1 1 auto; min-height: 200px; display: flex; flex-direction: column; overflow: hidden; }
+    .desktop-right .right-output-card .result-wrapper { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .desktop-right .right-output-card .result-body { flex: 1; max-height: none; overflow-y: auto; }
+    .desktop-right .right-aux-card { flex: 0 0 auto; }
     .desktop-generate-row { display: flex; flex-direction: column; gap: 8px; }
     .hide-desktop { display: none !important; }
     .settings-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; align-items: stretch; margin-bottom: 1rem; }
@@ -1070,6 +1093,56 @@
   body.dark .tab-btn#tbtn-existing.active { color: #60a5fa !important; }
   body.dark .tab-btn#tbtn-archive.active  { color: #f87171 !important; }
   body.dark .tab-btn#tbtn-settings.active { color: #a8b0bd !important; }
+
+  /* ────────────────────────────────────────────────────────
+     v6.28 — Mobile sub-tab system (二级 tab)
+     Only renders on mobile (≤768px). Desktop ignores entirely.
+     New tab: 3 sub-tabs (Photos / 7 Field / Generate)
+     Existing tab: 3 sub-tabs (Voice / 7 Field / Generate)
+     ──────────────────────────────────────────────────────── */
+  .subtab-bar { display: none; }
+  @media (max-width: 768px) {
+    .subtab-bar {
+      display: block;
+      position: sticky; top: 0; z-index: 60;
+      background: var(--surface); padding: 8px 0 6px;
+      margin: -1rem -0.75rem 0.75rem; padding-left: 0.75rem; padding-right: 0.75rem;
+      border-bottom: 1px solid var(--border);
+    }
+    body.dark .subtab-bar { background: #1a1f26; border-bottom-color: #2a323d; }
+    .subtab-inner {
+      display: flex; gap: 0; padding: 3px;
+      background: rgba(0,0,0,0.07); border-radius: 18px;
+    }
+    body.dark .subtab-inner { background: rgba(255,255,255,0.05); }
+    .subtab-btn {
+      flex: 1; padding: 8px 4px; border: none; border-radius: 14px;
+      background: transparent; font-family: 'DM Sans', sans-serif;
+      font-size: 12px; font-weight: 400; color: rgba(0,0,0,0.5);
+      cursor: pointer; transition: all 0.15s; text-align: center;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;
+      display: flex; align-items: center; justify-content: center; gap: 4px;
+    }
+    body.dark .subtab-btn { color: #6b7684; }
+    .subtab-btn.active {
+      background: #ffffff; font-weight: 600;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.10);
+    }
+    body.dark .subtab-btn.active { background: #242a33; box-shadow: 0 1px 4px rgba(0,0,0,0.4); }
+    /* Color continuation from main tab */
+    #tab-new .subtab-btn.active      { color: #059669; }
+    #tab-existing .subtab-btn.active { color: #2563eb; }
+    body.dark #tab-new .subtab-btn.active      { color: #34d399; }
+    body.dark #tab-existing .subtab-btn.active { color: #60a5fa; }
+
+    /* Sub-panel visibility — only one shown at a time on mobile */
+    .subpanel { display: none; }
+    .subpanel.active { display: block; }
+  }
+  /* Desktop: subtab bar hidden, ALL subpanels visible (preserves v6.27 desktop layout) */
+  @media (min-width: 769px) {
+    .subpanel { display: block !important; }
+  }
   body.dark .topbar-title { color: #e8ecef !important; }
   body.dark .topbar-ver-logo { color: #6b7684 !important; }
   body.dark .topbar-logo-img { border-color: #34d399 !important; box-shadow: 0 0 12px rgba(52,211,153,0.3); }
@@ -1182,14 +1255,14 @@
     <div class="topbar-logo"><img class="topbar-logo-img" src="data:image/jpeg;base64,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" style="width:36px;height:36px;object-fit:cover;"></div>
     <div>
       <div class="topbar-title">Tobib Lee</div>
-      <div class="topbar-ver-logo">v6.25 (29042026)</div>
+      <div class="topbar-ver-logo">v6.28 (29042026)</div>
     </div>
   </div>
   <div class="topbar-right" style="gap:8px;">
     <button onclick="toggleTopMenu()" id="topMenuBtn" aria-label="Menu" style="width:36px;height:36px;border:none;background:transparent;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text2);transition:background 0.15s;">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1.5"></circle><circle cx="12" cy="12" r="1.5"></circle><circle cx="12" cy="19" r="1.5"></circle></svg>
     </button>
-    <div id="topMenuPopover" style="display:none;position:absolute;top:50px;right:16px;background:var(--surface);border:1px solid var(--border);border-radius:12px;box-shadow:0 8px 24px rgba(15,23,42,0.08);padding:6px;min-width:200px;z-index:200;">
+    <div id="topMenuPopover" style="display: none; position: absolute; top: 50px; right: 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; box-shadow: rgba(15, 23, 42, 0.08) 0px 8px 24px; padding: 6px; min-width: 200px; z-index: 200;">
       <div onclick="toggleDarkMode();toggleTopMenu();" id="darkMenuItem" style="padding:9px 12px;border-radius:6px;cursor:pointer;display:flex;align-items:center;gap:10px;font-size:13px;color:var(--text);font-family:'DM Sans',sans-serif;">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text2);flex-shrink:0;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
         <span id="darkMenuText">Dark Mode</span>
@@ -1220,85 +1293,27 @@
 
   <!-- NEW SESSION TAB -->
   <div id="tab-new" class="tab-panel">
+    <!-- v6.28 — Mobile sub-tab bar (≤768px only) -->
+    <div class="subtab-bar hide-desktop" id="subtabBar-new">
+      <div class="subtab-inner">
+        <button class="subtab-btn active" id="subtab-new-photos" onclick="switchSubtab('new','photos')">📷 Photos</button>
+        <button class="subtab-btn" id="subtab-new-fields" onclick="switchSubtab('new','fields')">📝 7 Field</button>
+        <button class="subtab-btn" id="subtab-new-generate" onclick="switchSubtab('new','generate')">▶ Generate</button>
+      </div>
+    </div>
     <div class="desktop-cols">
 
     <!-- 左栏：输入区 -->
     <div class="desktop-left">
+
+    <!-- v6.28 — Subpanel: Photos -->
+    <div class="subpanel active" data-subtab="photos">
     <!-- Photos — Zone 1 + Zone 2 合并 (Stage 3) -->
-    <div class="card" id="photosCard">
-      <div class="card-title" style="font-size:16px;">Photos</div>
+    
+    </div><!-- /subpanel photos -->
 
-      <!-- 7 Field Form sub-section -->
-      <div class="photo-subsection">
-        <div class="photo-subsection-head">
-          <span class="photo-subsection-title">7 Field Form</span>
-          <span class="photo-subsection-count" id="previewCount-new"></span>
-        </div>
-        <label class="upload-zone upload-zone-compact" id="uploadZone-new" for="fileInput-new" style="display:block;cursor:pointer;">
-          <input type="file" id="fileInput-new" accept="image/*" multiple="" style="display:none" onchange="handleFiles(this.files,'new')">
-          <div class="upload-icon-sm">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1"></rect><path d="M9 14l2 2 4-4"></path></svg>
-          </div>
-          <div class="upload-text-sm">Upload patient 7-field form</div>
-          <div class="upload-sub-sm">JPG / PNG · Multiple files · Drag &amp; drop</div>
-        </label>
-        <input type="file" id="cameraInput-new" accept="image/*" capture="environment" style="display:none" onchange="handleFiles(this.files,'new')">
-        <div class="preview-grid" id="previewGrid-new"></div>
-        <div style="display:flex;gap:8px;margin-top:10px;">
-          <button onclick="document.getElementById('cameraInput-new').click()" class="btn-compact btn-compact-outline">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
-            Take Photo
-          </button>
-          <button id="scanBtn-new" onclick="scanPhotos()" class="btn-compact btn-compact-primary">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-            Scan Photos
-          </button>
-          <button onclick="clearZonePhotos('new')" class="btn-compact btn-compact-icon" title="Clear photos">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6m5 0V4a2 2 0 0 1 2-2h0a2 2 0 0 1 2 2v2"></path></svg>
-          </button>
-        </div>
-        <div style="margin-top:8px;">
-          <span class="status-bar" id="scanBadge"><span class="status-dot status-dot-idle"></span><span style="color:var(--text3);">No photos yet</span></span>
-        </div>
-        <div id="scanProgressWrap" style="display:none;margin-top:8px;">
-          <div style="background:var(--border);border-radius:4px;height:5px;overflow:hidden;">
-            <div id="scanProgressBar" style="height:100%;width:0%;background:var(--accent);border-radius:4px;transition:width 0.3s ease;"></div>
-          </div>
-          <div id="scanProgressLabel" style="font-size:11px;color:var(--text3);margin-top:4px;font-family:'DM Mono',monospace;"></div>
-        </div>
-      </div>
-
-      <!-- Divider -->
-      <div class="photo-divider"></div>
-
-      <!-- Medical Form sub-section -->
-      <div class="photo-subsection">
-        <div class="photo-subsection-head">
-          <span class="photo-subsection-title">Medical Form</span>
-          <span class="photo-subsection-count" id="previewCount-ref"></span>
-        </div>
-        <label class="upload-zone upload-zone-compact" id="uploadZone-ref" for="fileInput-ref" style="display:block;cursor:pointer;">
-          <input type="file" id="fileInput-ref" accept="image/*" multiple="" style="display:none" onchange="handleFiles(this.files,'ref')">
-          <div class="upload-icon-sm">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-          </div>
-          <div class="upload-text-sm">Upload medical form (optional)</div>
-          <div class="upload-sub-sm">Used as reference for Generate</div>
-        </label>
-        <input type="file" id="cameraInput-ref" accept="image/*" capture="environment" style="display:none" onchange="handleFiles(this.files,'ref')">
-        <div class="preview-grid" id="previewGrid-ref"></div>
-        <div style="display:flex;gap:8px;margin-top:10px;">
-          <button onclick="document.getElementById('cameraInput-ref').click()" class="btn-compact btn-compact-outline">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
-            Take Photo
-          </button>
-          <button onclick="clearZonePhotos('ref')" class="btn-compact btn-compact-icon" title="Clear photos">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6m5 0V4a2 2 0 0 1 2-2h0a2 2 0 0 1 2 2v2"></path></svg>
-          </button>
-        </div>
-      </div>
-    </div>
-
+    <!-- v6.28 — Subpanel: 7 Field (Clinical Notes) -->
+    <div class="subpanel" data-subtab="fields">
     <div class="card">
       <div class="card-title">Clinical Notes <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text3);font-size:11px;">auto-filled from scan · edit before generating</span></div>
       <!-- Stage 4: Swipe container for Clinical Notes -->
@@ -1317,7 +1332,7 @@
                 <div class="swipe-dot" onclick="clinicalGoToPage(3, true)" title="Therapy &amp; Suggestion">4</div>
               </div>
             </div>
-            <div class="sw-sub" id="clinicalPageCount">Page 1 / 4 · 3/3 filled · 16%</div>
+            <div class="sw-sub" id="clinicalPageCount">Page 1 / 4 · 3/3 filled · 34%</div>
           </div>
           <div class="swipe-mode-toggle hide-mobile">
             <button class="" id="modeScrollBtn" onclick="setClinicalMode('scroll')" title="Show all sections vertically">
@@ -1359,7 +1374,7 @@
       <div class="new-field" data-field-id="note-septum-new" style="margin-bottom:10px;">
         
         <div style="font-size:10px;color:var(--text3);margin-bottom:5px;">Normal / Deviated (toward Right or Left)</div>
-        <div class="new-chips"><div class="new-chip" data-val="Normal" onclick="exChipClick(this,'note-septum-new','single')">Normal</div><div class="new-chip" data-val="Deviated Right" onclick="exChipClick(this,'note-septum-new','single')">Deviated Right</div><div class="new-chip" data-val="Deviated Left" onclick="exChipClick(this,'note-septum-new','single')">Deviated Left</div></div>
+        <div class="new-chips"><div class="new-chip" data-val="Normal" onclick="exChipClick(this,'note-septum-new','single')">Normal</div><div class="new-chip active" data-val="Deviated Right" onclick="exChipClick(this,'note-septum-new','single')">Deviated Right</div><div class="new-chip" data-val="Deviated Left" onclick="exChipClick(this,'note-septum-new','single')">Deviated Left</div></div>
         
         <textarea class="new-hidden-ta has-content" id="note-septum-new" style="height: 0px;"></textarea>
       </div>
@@ -1369,16 +1384,16 @@
       <div class="new-field" data-field-id="note-right-nasal-new" style="margin-bottom:10px;">
         <label style="font-size:11px;font-weight:500;color:var(--text2);display:block;margin-bottom:4px;">Nasal Cavity</label>
         
-        <div class="new-chips"><div class="new-chip" data-val="Normal" onclick="exChipClick(this,'note-right-nasal-new','single')">Normal</div><div class="new-chip" data-val="Dry" onclick="exChipClick(this,'note-right-nasal-new','single')">Dry</div><div class="new-chip" data-val="Moist" onclick="exChipClick(this,'note-right-nasal-new','single')">Moist</div></div>
+        <div class="new-chips"><div class="new-chip" data-val="Normal" onclick="exChipClick(this,'note-right-nasal-new','single')">Normal</div><div class="new-chip active" data-val="Dry" onclick="exChipClick(this,'note-right-nasal-new','single')">Dry</div><div class="new-chip" data-val="Moist" onclick="exChipClick(this,'note-right-nasal-new','single')">Moist</div></div>
         
         <textarea class="new-hidden-ta has-content" id="note-right-nasal-new" style="height: 0px;"></textarea>
       </div>
       <div class="new-field" data-field-id="note-right-septum-new" style="margin-bottom:10px;">
         <label style="font-size:11px;font-weight:500;color:var(--text2);display:block;margin-bottom:4px;">Septum Mucosa <span style="font-size:9px;color:var(--text3);font-weight:400;">· multi-select</span></label>
         
-        <div class="new-chips"><div class="new-chip" data-val="Normal" onclick="exChipClick(this,'note-right-septum-new','multi')">Normal</div><div class="new-chip" data-val="Damage" onclick="exChipClick(this,'note-right-septum-new','multi')">Damage</div><div class="new-chip" data-val="Pale" onclick="exChipClick(this,'note-right-septum-new','multi')">Pale</div><div class="new-chip" data-val="Redness" onclick="exChipClick(this,'note-right-septum-new','multi')">Redness</div></div>
+        <div class="new-chips"><div class="new-chip" data-val="Normal" onclick="exChipClick(this,'note-right-septum-new','multi')">Normal</div><div class="new-chip" data-val="Damage" onclick="exChipClick(this,'note-right-septum-new','multi')">Damage</div><div class="new-chip active" data-val="Pale" onclick="exChipClick(this,'note-right-septum-new','multi')">Pale</div><div class="new-chip" data-val="Redness" onclick="exChipClick(this,'note-right-septum-new','multi')">Redness</div></div>
         
-        <textarea class="new-hidden-ta" id="note-right-septum-new" style="height: 0px;"></textarea>
+        <textarea class="new-hidden-ta has-content" id="note-right-septum-new" style="height: 0px;"></textarea>
       </div>
       <div class="new-field" data-field-id="note-right-turb-new" style="margin-bottom:10px;">
         <label style="font-size:11px;font-weight:500;color:var(--text2);display:block;margin-bottom:4px;">Turbinate <span style="font-size:9px;color:var(--text3);font-weight:400;">· multi-select</span></label>
@@ -1413,36 +1428,36 @@
       <div class="new-field" data-field-id="note-left-nasal-new" style="margin-bottom:10px;">
         <label style="font-size:11px;font-weight:500;color:var(--text2);display:block;margin-bottom:4px;">Nasal Cavity</label>
         
-        <div class="new-chips"><div class="new-chip" data-val="Normal" onclick="exChipClick(this,'note-left-nasal-new','single')">Normal</div><div class="new-chip" data-val="Dry" onclick="exChipClick(this,'note-left-nasal-new','single')">Dry</div><div class="new-chip" data-val="Moist" onclick="exChipClick(this,'note-left-nasal-new','single')">Moist</div></div>
+        <div class="new-chips"><div class="new-chip" data-val="Normal" onclick="exChipClick(this,'note-left-nasal-new','single')">Normal</div><div class="new-chip" data-val="Dry" onclick="exChipClick(this,'note-left-nasal-new','single')">Dry</div><div class="new-chip active" data-val="Moist" onclick="exChipClick(this,'note-left-nasal-new','single')">Moist</div></div>
         
-        <textarea class="new-hidden-ta" id="note-left-nasal-new" style="height: 0px;"></textarea>
+        <textarea class="new-hidden-ta has-content" id="note-left-nasal-new" style="height: 0px;"></textarea>
       </div>
       <div class="new-field" data-field-id="note-left-septum-new" style="margin-bottom:10px;">
         <label style="font-size:11px;font-weight:500;color:var(--text2);display:block;margin-bottom:4px;">Septum Mucosa <span style="font-size:9px;color:var(--text3);font-weight:400;">· multi-select</span></label>
         
-        <div class="new-chips"><div class="new-chip" data-val="Normal" onclick="exChipClick(this,'note-left-septum-new','multi')">Normal</div><div class="new-chip" data-val="Damage" onclick="exChipClick(this,'note-left-septum-new','multi')">Damage</div><div class="new-chip" data-val="Pale" onclick="exChipClick(this,'note-left-septum-new','multi')">Pale</div><div class="new-chip" data-val="Redness" onclick="exChipClick(this,'note-left-septum-new','multi')">Redness</div></div>
+        <div class="new-chips"><div class="new-chip" data-val="Normal" onclick="exChipClick(this,'note-left-septum-new','multi')">Normal</div><div class="new-chip" data-val="Damage" onclick="exChipClick(this,'note-left-septum-new','multi')">Damage</div><div class="new-chip active" data-val="Pale" onclick="exChipClick(this,'note-left-septum-new','multi')">Pale</div><div class="new-chip" data-val="Redness" onclick="exChipClick(this,'note-left-septum-new','multi')">Redness</div></div>
         
-        <textarea class="new-hidden-ta" id="note-left-septum-new" style="height: 0px;"></textarea>
+        <textarea class="new-hidden-ta has-content" id="note-left-septum-new" style="height: 0px;"></textarea>
       </div>
       <div class="new-field" data-field-id="note-left-turb-new" style="margin-bottom:10px;">
         <label style="font-size:11px;font-weight:500;color:var(--text2);display:block;margin-bottom:4px;">Turbinate <span style="font-size:9px;color:var(--text3);font-weight:400;">· multi-select</span></label>
         
-        <div class="new-chips"><div class="new-chip" data-val="Normal" onclick="exChipClick(this,'note-left-turb-new','multi')">Normal</div><div class="new-chip" data-val="Pale" onclick="exChipClick(this,'note-left-turb-new','multi')">Pale</div><div class="new-chip" data-val="Redness" onclick="exChipClick(this,'note-left-turb-new','multi')">Redness</div></div>
+        <div class="new-chips"><div class="new-chip" data-val="Normal" onclick="exChipClick(this,'note-left-turb-new','multi')">Normal</div><div class="new-chip active" data-val="Pale" onclick="exChipClick(this,'note-left-turb-new','multi')">Pale</div><div class="new-chip active" data-val="Redness" onclick="exChipClick(this,'note-left-turb-new','multi')">Redness</div></div>
         
-        <textarea class="new-hidden-ta" id="note-left-turb-new" style="height: 0px;"></textarea>
+        <textarea class="new-hidden-ta has-content" id="note-left-turb-new" style="height: 0px;"></textarea>
       </div>
       <div class="new-field" data-field-id="note-left-swell-new" style="margin-bottom:10px;">
         <label style="font-size:11px;font-weight:500;color:var(--text2);display:block;margin-bottom:4px;">Swelling</label>
         
-        <div class="new-chips"><div class="new-chip" data-val="None" onclick="exChipClick(this,'note-left-swell-new','single')">None</div><div class="new-chip" data-val="Mild" onclick="exChipClick(this,'note-left-swell-new','single')" data-has-slider="1">Mild</div><div class="new-chip" data-val="Moderate" onclick="exChipClick(this,'note-left-swell-new','single')" data-has-slider="1">Moderate</div><div class="new-chip" data-val="Severe" onclick="exChipClick(this,'note-left-swell-new','single')" data-has-slider="1">Severe</div></div>
+        <div class="new-chips"><div class="new-chip" data-val="None" onclick="exChipClick(this,'note-left-swell-new','single')">None</div><div class="new-chip" data-val="Mild" onclick="exChipClick(this,'note-left-swell-new','single')" data-has-slider="1">Mild</div><div class="new-chip active" data-val="Moderate" onclick="exChipClick(this,'note-left-swell-new','single')" data-has-slider="1">Moderate</div><div class="new-chip" data-val="Severe" onclick="exChipClick(this,'note-left-swell-new','single')" data-has-slider="1">Severe</div></div>
         
       <div class="new-swell-slider" id="note-left-swell-new-slider">
         <div class="new-swell-slider-row">
           <input type="range" min="0" max="100" step="10" value="30" id="note-left-swell-new-range" oninput="exSliderChange('note-left-swell-new',this.value)">
-          <span class="new-swell-val" id="note-left-swell-new-val">30%</span>
+          <span class="new-swell-val" id="note-left-swell-new-val">40%</span>
         </div>
       </div>
-        <textarea class="new-hidden-ta" id="note-left-swell-new" style="height: 0px;"></textarea>
+        <textarea class="new-hidden-ta has-content" id="note-left-swell-new" style="height: 0px;"></textarea>
       </div>
       <div class="new-field" data-field-id="note-left-breath-new" style="margin-bottom:10px;">
         <label style="font-size:11px;font-weight:500;color:var(--text2);display:block;margin-bottom:4px;">Breathing</label>
@@ -1469,9 +1484,9 @@
       <div class="new-field" data-field-id="note-ear-new" style="margin-bottom:10px;">
         
         <div style="font-size:10px;color:var(--text3);margin-bottom:5px;">Bubble / Itchy / Dizzy / Soreness / None (can be multiple)</div>
-        <div class="new-chips"><div class="new-chip" data-val="None" onclick="exChipClick(this,'note-ear-new','multi')">None</div><div class="new-chip" data-val="Bubble" onclick="exChipClick(this,'note-ear-new','multi')">Bubble</div><div class="new-chip" data-val="Itchy" onclick="exChipClick(this,'note-ear-new','multi')">Itchy</div><div class="new-chip" data-val="Dizzy" onclick="exChipClick(this,'note-ear-new','multi')">Dizzy</div><div class="new-chip" data-val="Soreness" onclick="exChipClick(this,'note-ear-new','multi')">Soreness</div></div>
+        <div class="new-chips"><div class="new-chip" data-val="None" onclick="exChipClick(this,'note-ear-new','multi')">None</div><div class="new-chip" data-val="Bubble" onclick="exChipClick(this,'note-ear-new','multi')">Bubble</div><div class="new-chip active" data-val="Itchy" onclick="exChipClick(this,'note-ear-new','multi')">Itchy</div><div class="new-chip" data-val="Dizzy" onclick="exChipClick(this,'note-ear-new','multi')">Dizzy</div><div class="new-chip" data-val="Soreness" onclick="exChipClick(this,'note-ear-new','multi')">Soreness</div></div>
         
-        <textarea class="new-hidden-ta" id="note-ear-new" style="height: 0px;"></textarea>
+        <textarea class="new-hidden-ta has-content" id="note-ear-new" style="height: 0px;"></textarea>
       </div>
     </div><div style="background:#fafbfc;border-radius:12px;padding:12px 14px;margin-bottom:10px;border:1px solid var(--border);">
       <div style="font-size:13px;font-weight:600;color:var(--accent);margin-bottom:8px;">5.2 Nose Test</div>
@@ -1592,7 +1607,10 @@
         </div>
       </div>
     </div>
+    </div><!-- /subpanel fields -->
 
+    <!-- v6.28 — Subpanel: Generate (mobile only — desktop has its own right-column Generate) -->
+    <div class="subpanel" data-subtab="generate">
     <!-- 手机版 Generate 按钮 (电脑版隐藏 - 桌面版在右栏) -->
     <div class="card hide-desktop" id="generateCardMobile">
       <button class="btn btn-primary" id="generateBtn-new-mobile" onclick="generateLog('new')" style="width:100%;background:var(--accent);font-size:14px;padding:12px;font-weight:600;">
@@ -1634,13 +1652,89 @@
         <div class="result-body" id="resultBody-new-mobile"><span class="result-placeholder">CON LOG will appear here after generation...</span></div>
       </div>
     </div>
+    </div><!-- /subpanel generate -->
     </div><!-- /desktop-left -->
 
-    <!-- 右栏：电脑版 Generate 按钮 + CON LOG Output -->
+    <!-- 右栏：电脑版 Photos + Generate 按钮 + CON LOG Output -->
     <div class="desktop-right hide-mobile">
 
+      <!-- v6.27 — Photos 卡片占位（JS 在桌面模式下把 #photosCard 移到这里） -->
+      <div id="photosSlot-desktop"><div class="card right-aux-card" id="photosCard">
+      <div class="card-title" style="font-size:16px;">Photos</div>
+
+      <!-- 7 Field Form sub-section -->
+      <div class="photo-subsection">
+        <div class="photo-subsection-head">
+          <span class="photo-subsection-title">7 Field Form</span>
+          <span class="photo-subsection-count" id="previewCount-new"></span>
+        </div>
+        <label class="upload-zone upload-zone-compact" id="uploadZone-new" for="fileInput-new" style="display:block;cursor:pointer;">
+          <input type="file" id="fileInput-new" accept="image/*" multiple="" style="display:none" onchange="handleFiles(this.files,'new')">
+          <div class="upload-icon-sm">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1"></rect><path d="M9 14l2 2 4-4"></path></svg>
+          </div>
+          <div class="upload-text-sm">Upload patient 7-field form</div>
+          <div class="upload-sub-sm">JPG / PNG · Multiple files · Drag &amp; drop</div>
+        </label>
+        <input type="file" id="cameraInput-new" accept="image/*" capture="environment" style="display:none" onchange="handleFiles(this.files,'new')">
+        <div class="preview-grid" id="previewGrid-new"></div>
+        <div style="display:flex;gap:8px;margin-top:10px;">
+          <button onclick="document.getElementById('cameraInput-new').click()" class="btn-compact btn-compact-outline">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+            Take Photo
+          </button>
+          <button id="scanBtn-new" onclick="scanPhotos()" class="btn-compact btn-compact-primary">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            Scan Photos
+          </button>
+          <button onclick="clearZonePhotos('new')" class="btn-compact btn-compact-icon" title="Clear photos">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6m5 0V4a2 2 0 0 1 2-2h0a2 2 0 0 1 2 2v2"></path></svg>
+          </button>
+        </div>
+        <div style="margin-top:8px;">
+          <span class="status-bar" id="scanBadge"><span class="status-dot status-dot-idle"></span><span style="color:var(--text3);">No photos yet</span></span>
+        </div>
+        <div id="scanProgressWrap" style="display:none;margin-top:8px;">
+          <div style="background:var(--border);border-radius:4px;height:5px;overflow:hidden;">
+            <div id="scanProgressBar" style="height:100%;width:0%;background:var(--accent);border-radius:4px;transition:width 0.3s ease;"></div>
+          </div>
+          <div id="scanProgressLabel" style="font-size:11px;color:var(--text3);margin-top:4px;font-family:'DM Mono',monospace;"></div>
+        </div>
+      </div>
+
+      <!-- Divider -->
+      <div class="photo-divider"></div>
+
+      <!-- Medical Form sub-section -->
+      <div class="photo-subsection">
+        <div class="photo-subsection-head">
+          <span class="photo-subsection-title">Medical Form</span>
+          <span class="photo-subsection-count" id="previewCount-ref"></span>
+        </div>
+        <label class="upload-zone upload-zone-compact" id="uploadZone-ref" for="fileInput-ref" style="display:block;cursor:pointer;">
+          <input type="file" id="fileInput-ref" accept="image/*" multiple="" style="display:none" onchange="handleFiles(this.files,'ref')">
+          <div class="upload-icon-sm">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+          </div>
+          <div class="upload-text-sm">Upload medical form (optional)</div>
+          <div class="upload-sub-sm">Used as reference for Generate</div>
+        </label>
+        <input type="file" id="cameraInput-ref" accept="image/*" capture="environment" style="display:none" onchange="handleFiles(this.files,'ref')">
+        <div class="preview-grid" id="previewGrid-ref"></div>
+        <div style="display:flex;gap:8px;margin-top:10px;">
+          <button onclick="document.getElementById('cameraInput-ref').click()" class="btn-compact btn-compact-outline">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+            Take Photo
+          </button>
+          <button onclick="clearZonePhotos('ref')" class="btn-compact btn-compact-icon" title="Clear photos">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6m5 0V4a2 2 0 0 1 2-2h0a2 2 0 0 1 2 2v2"></path></svg>
+          </button>
+        </div>
+      </div>
+    </div></div>
+
       <!-- Desktop Generate 按钮 -->
-      <div class="card" id="generateCardDesktop">
+      <div class="card right-aux-card" id="generateCardDesktop">
         <button class="btn btn-primary" id="generateBtn-new" onclick="generateLog('new')" style="width:100%;background:var(--accent);font-size:14px;padding:12px;font-weight:600;">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:6px;"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg>
           Generate CON LOG
@@ -1651,7 +1745,7 @@
       </div>
 
       <!-- CON LOG Output -->
-      <div class="card">
+      <div class="card right-output-card">
         <div class="card-title">CON LOG Output</div>
         <div class="result-wrapper">
           <div class="result-toolbar">
@@ -1688,29 +1782,28 @@
   <div id="tab-existing" class="tab-panel">
     <input type="hidden" id="existingIC">
     <div id="icStatus" style="display:none;"></div>
+
+    <!-- v6.28 — Mobile sub-tab bar -->
+    <div class="subtab-bar hide-desktop" id="subtabBar-existing">
+      <div class="subtab-inner">
+        <button class="subtab-btn active" id="subtab-existing-voice" onclick="switchSubtab('existing','voice')">🎙 Voice</button>
+        <button class="subtab-btn" id="subtab-existing-fields" onclick="switchSubtab('existing','fields')">📝 7 Field</button>
+        <button class="subtab-btn" id="subtab-existing-generate" onclick="switchSubtab('existing','generate')">▶ Generate</button>
+      </div>
+    </div>
+
     <div class="desktop-cols">
 
     <!-- 左栏：输入区 -->
     <div class="desktop-left">
-    <div class="card" style="border-top:3px solid var(--blue);border-color:var(--blue);margin-bottom:1rem;">
-      <div class="card-title">Voice Input <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text3);font-size:11px;">English · 中文 · Bahasa Melayu</span></div>
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
-        <div style="flex:1;min-width:0;">
-          <div id="voiceStatus" style="font-size:13px;color:var(--text2);font-weight:500;">Tap 🎙 to start recording</div>
-        </div>
-        <button id="voiceBtn" onclick="toggleVoice()" title="Record voice" style="width:48px;height:48px;border-radius:50%;border:2px solid var(--blue);background:transparent;color:var(--blue);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;flex-shrink:0;">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"></rect><path d="M5 10a7 7 0 0 0 14 0"></path><line x1="12" y1="19" x2="12" y2="22"></line><line x1="8" y1="22" x2="16" y2="22"></line></svg>
-        </button>
-      </div>
-      <div id="voiceProcessWrap" style="display:none;margin-bottom:10px;">
-        <div style="background:var(--border);border-radius:4px;height:4px;overflow:hidden;">
-          <div id="voiceProcessBar" style="height:100%;width:0%;background:var(--blue);border-radius:4px;transition:width 0.4s;"></div>
-        </div>
-        <div id="voiceProcessLabel" style="font-size:11px;color:var(--text3);margin-top:4px;font-family:'DM Mono',monospace;"></div>
-      </div>
-      <div id="voiceHistoryList" style="display:none;"></div>
-    </div>
 
+    <!-- v6.28 — Subpanel: Voice (redesigned with large centered button + 4 states all blue) -->
+    <div class="subpanel active" data-subtab="voice">
+    
+    </div><!-- /subpanel voice -->
+
+    <!-- v6.28 — Subpanel: 7 Field (Clinical Notes) -->
+    <div class="subpanel" data-subtab="fields">
     <div class="card" style="border-top:3px solid var(--blue);border-color:var(--blue);">
       <div class="card-title">Clinical Notes <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text3);font-size:11px;">speak or type each field</span></div>
       <div id="noteFields-existing">
@@ -1888,7 +1981,10 @@
     </div>
   </div>
     </div>
+    </div><!-- /subpanel fields -->
 
+    <!-- v6.28 — Subpanel: Generate (mobile only) -->
+    <div class="subpanel" data-subtab="generate">
     <!-- 手机版 Generate + Output（电脑隐藏） -->
     <div class="hide-desktop">
       <div class="action-row">
@@ -1915,11 +2011,70 @@
         </div>
       </div>
     </div>
+    </div><!-- /subpanel generate -->
     </div><!-- /desktop-left -->
 
-    <!-- 右栏：电脑版 CON LOG Output -->
+    <!-- 右栏：电脑版 Voice Input + Generate 按钮 + CON LOG Output -->
     <div class="desktop-right hide-mobile">
-      <div class="card" style="border-top:3px solid var(--blue);border-color:var(--blue);">
+
+      <!-- v6.27 — Voice Input 卡片占位（JS 在桌面模式下把 #voiceInputCard 移到这里） -->
+      <div id="voiceSlot-desktop"><div class="card right-aux-card" id="voiceInputCard" style="border-top:3px solid var(--blue);border-color:var(--blue);margin-bottom:1rem;">
+      <div class="card-title">Voice Input <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text3);font-size:11px;">English · 中文 · Bahasa Melayu</span></div>
+
+      <!-- v6.28 redesign — large centered button + status text above + waveform inside -->
+      <div id="voiceCenter" style="display:flex;flex-direction:column;align-items:center;padding:8px 0 14px;">
+        <div id="voiceStatusLine" style="text-align:center;margin-bottom:10px;">
+          <div id="voiceStatusBadge" style="font-size: 11px; margin-bottom: 4px;">English · 中文 · Bahasa</div>
+          <div id="voiceStatus" style="font-size:14px;font-weight:500;color:var(--text);">Tap to start recording</div>
+        </div>
+
+        <button id="voiceBtn" onclick="toggleVoice()" title="Record voice" style="width:120px;height:120px;border-radius:50%;border:3px solid var(--blue);background:var(--surface);color:var(--blue);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.25s;flex-shrink:0;box-shadow:0 4px 14px rgba(37,99,235,0.18);">
+          <svg id="voiceBtnIcon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="2" width="6" height="12" rx="3"></rect>
+            <path d="M5 10a7 7 0 0 0 14 0"></path>
+            <line x1="12" y1="19" x2="12" y2="22"></line>
+            <line x1="8" y1="22" x2="16" y2="22"></line>
+          </svg>
+          <span class="voice-wave" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span>
+        </button>
+
+        <div id="voiceHint" style="font-size:11px;color:var(--text3);margin-top:12px;text-align:center;">Tap to record · Tap again to stop</div>
+      </div>
+
+      <!-- Parsing progress bar (state 3) — shown during AI parse -->
+      <div id="voiceProcessWrap" style="display:none;margin:8px 0 12px;">
+        <div style="background:var(--accent-light);border-radius:4px;height:5px;overflow:hidden;border:1px solid rgba(37,99,235,0.2);">
+          <div id="voiceProcessBar" style="height:100%;width:0%;background:var(--blue);border-radius:4px;transition:width 0.4s;"></div>
+        </div>
+        <div id="voiceProcessLabel" style="font-size:11px;color:var(--blue);margin-top:5px;font-family:'DM Mono',monospace;text-align:center;font-weight:500;"></div>
+      </div>
+
+      <!-- Done summary card (state 4) — shown after fields filled -->
+      <div id="voiceDoneCard" style="display:none;margin-top:6px;background:#eff6ff;border:1px solid rgba(37,99,235,0.3);border-radius:10px;padding:11px 12px;">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:7px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          <span id="voiceDoneCount" style="font-size:11px;font-weight:600;color:#1e40af;">0 fields auto-filled</span>
+        </div>
+        <div id="voiceDoneTranscript" style="background:var(--surface);padding:7px 9px;border-radius:6px;margin-bottom:7px;font-size:12px;color:var(--text2);font-style:italic;line-height:1.4;display:none;"></div>
+        <div id="voiceDoneFields" style="font-size:11px;color:var(--text);line-height:1.65;"></div>
+        <button onclick="switchSubtab('existing','fields')" class="hide-desktop" style="width:100%;margin-top:9px;padding:8px;background:var(--blue);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;">📝 Review fields</button>
+      </div>
+
+      <!-- Recent activity (history list) — kept for backward compat -->
+      <div id="voiceHistoryList" style="display:none;"></div>
+    </div></div>
+
+      <!-- Desktop Generate 按钮 (Existing) -->
+      <div class="card right-aux-card" style="border-top:3px solid var(--blue);border-color:var(--blue);">
+        <button class="btn btn-primary" id="generateBtn-existing" onclick="generateLog('existing')" style="background:var(--blue);font-size:14px;padding:11px;width:100%;">Generate CON LOG</button>
+        <div style="margin-top:8px;display:flex;align-items:center;justify-content:center;">
+          <span class="status-bar" id="statusBadge-existing"><span class="status-dot status-dot-idle"></span><span style="color:var(--text3);">Ready</span></span>
+        </div>
+        <div style="font-size:11px;color:var(--text3);margin-top:6px;">💡 Recommended: gemini-2.5-flash-lite — faster generation, but output will be simpler</div>
+      </div>
+
+      <!-- CON LOG Output (Existing) -->
+      <div class="card right-output-card" style="border-top:3px solid var(--blue);border-color:var(--blue);">
         <div class="card-title">CON LOG Output</div>
         <div class="result-wrapper">
           <div class="result-toolbar">
@@ -1931,11 +2086,6 @@
             </div>
           </div>
           <div class="result-body" id="resultBody-existing"><span class="result-placeholder">CON LOG will appear here after generation...</span></div>
-        </div>
-        <div style="margin-top:12px;display:flex;flex-direction:column;gap:8px;">
-          <button class="btn btn-primary" id="generateBtn-existing" onclick="generateLog('existing')" style="background:var(--blue);font-size:14px;padding:11px;">Generate CON LOG</button>
-          <span class="status-bar" id="statusBadge-existing"><span class="status-dot status-dot-idle"></span><span style="color:var(--text3);">Ready</span></span>
-          <div style="font-size:11px;color:var(--text3);">💡 Recommended: gemini-2.5-flash-lite — faster generation, but output will be simpler</div>
         </div>
       </div>
     </div>
@@ -2172,7 +2322,7 @@
       </div>
       <div class="field">
         <label id="promptEditorLabel">Clinical role instructions for New tab (photos + 7 sections)</label>
-        <textarea id="systemPromptInput" style="min-height:320px;font-family:'DM Mono',monospace;font-size:12px;line-height:1.7;" class="has-content"></textarea>
+        <textarea id="systemPromptInput" style="min-height:320px;font-family:'DM Mono',monospace;font-size:12px;line-height:1.7;"></textarea>
       </div>
       <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:10px;align-items:center;">
         <div id="gistSyncStatus" style="font-size:11px;color:var(--text3);flex:1;"></div>
@@ -2677,6 +2827,11 @@ window.addEventListener('DOMContentLoaded', () => {
     setupDrag();
     setupOfflineDetection();
     setupKeyboardHandling();
+    // v6.27 — first-pass desktop aux layout (move Photos / Voice to right column on desktop)
+    updateDesktopAuxLayout();
+    // v6.28 — restore last-used sub-tab + initialize Voice idle state
+    restoreSubtabs();
+    setVoiceState('idle');
   } catch(e) {
     console.error('Init error:', e);
   }
@@ -4059,7 +4214,171 @@ document.addEventListener('input', (e) => {
 window.addEventListener('resize', () => {
   clearTimeout(window._clinicalResizeTimer);
   window._clinicalResizeTimer = setTimeout(initClinicalSwipeMode, 200);
+  // v6.27 — also re-evaluate desktop aux layout on resize (e.g. user shrinks window across 769px breakpoint)
+  if (typeof updateDesktopAuxLayout === 'function') updateDesktopAuxLayout();
 });
+
+// ── v6.27 — Desktop aux layout (Photos / Voice card position) ─────────
+// On desktop (≥769px): move #photosCard and #voiceInputCard into right column slots.
+// On mobile (<769px): move them back to their original left-column position.
+// Uses a single source of truth (each card has only one DOM instance) to avoid duplicate IDs.
+const _desktopAuxState = {
+  photosHomeParent: null,   // original parent of #photosCard (left column)
+  photosHomeNext: null,     // original nextSibling so we can re-insert at the same spot
+  voiceHomeParent: null,
+  voiceHomeNext: null,
+  initialized: false
+};
+
+function updateDesktopAuxLayout() {
+  const isDesktop = window.matchMedia('(min-width: 769px)').matches;
+  const photos = document.getElementById('photosCard');
+  const voice  = document.getElementById('voiceInputCard');
+  const photosSlot = document.getElementById('photosSlot-desktop');
+  const voiceSlot  = document.getElementById('voiceSlot-desktop');
+
+  // First-time: remember original (mobile/left-column) home positions
+  if (!_desktopAuxState.initialized) {
+    if (photos) {
+      _desktopAuxState.photosHomeParent = photos.parentElement;
+      _desktopAuxState.photosHomeNext = photos.nextSibling;
+    }
+    if (voice) {
+      _desktopAuxState.voiceHomeParent = voice.parentElement;
+      _desktopAuxState.voiceHomeNext = voice.nextSibling;
+    }
+    _desktopAuxState.initialized = true;
+  }
+
+  if (isDesktop) {
+    // Move into right-column slots if not already there
+    if (photos && photosSlot && photos.parentElement !== photosSlot) {
+      photosSlot.appendChild(photos);
+      photos.classList.add('right-aux-card');
+    }
+    if (voice && voiceSlot && voice.parentElement !== voiceSlot) {
+      voiceSlot.appendChild(voice);
+      voice.classList.add('right-aux-card');
+    }
+  } else {
+    // Mobile: move back to left-column home position
+    if (photos && _desktopAuxState.photosHomeParent && photos.parentElement !== _desktopAuxState.photosHomeParent) {
+      _desktopAuxState.photosHomeParent.insertBefore(photos, _desktopAuxState.photosHomeNext);
+      photos.classList.remove('right-aux-card');
+    }
+    if (voice && _desktopAuxState.voiceHomeParent && voice.parentElement !== _desktopAuxState.voiceHomeParent) {
+      _desktopAuxState.voiceHomeParent.insertBefore(voice, _desktopAuxState.voiceHomeNext);
+      voice.classList.remove('right-aux-card');
+    }
+  }
+}
+
+// ── v6.28 — Mobile sub-tab system ────────────────────────────
+// Each main tab (new / existing) has 3 sub-tabs.
+// Persists per-tab selection in localStorage so user returns to the same sub-tab.
+function switchSubtab(mainTab, subId) {
+  const tabPanel = document.getElementById('tab-' + mainTab);
+  if (!tabPanel) return;
+  // Update sub-tab button active state
+  tabPanel.querySelectorAll('.subtab-btn').forEach(btn => btn.classList.remove('active'));
+  const activeBtn = document.getElementById('subtab-' + mainTab + '-' + subId);
+  if (activeBtn) activeBtn.classList.add('active');
+  // Update sub-panel visibility
+  tabPanel.querySelectorAll('.subpanel').forEach(p => {
+    p.classList.toggle('active', p.getAttribute('data-subtab') === subId);
+  });
+  // Persist
+  localStorage.setItem('conlog_subtab_' + mainTab, subId);
+  // Scroll to top of the panel area for fresh feel
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Restore last-used sub-tab on init for both main tabs
+function restoreSubtabs() {
+  ['new', 'existing'].forEach(mt => {
+    const saved = localStorage.getItem('conlog_subtab_' + mt);
+    if (!saved) return;
+    const tabPanel = document.getElementById('tab-' + mt);
+    if (!tabPanel) return;
+    // Verify the saved sub-tab still exists
+    const targetPanel = tabPanel.querySelector(`.subpanel[data-subtab="${saved}"]`);
+    if (!targetPanel) return;
+    tabPanel.querySelectorAll('.subtab-btn').forEach(btn => btn.classList.remove('active'));
+    const activeBtn = document.getElementById('subtab-' + mt + '-' + saved);
+    if (activeBtn) activeBtn.classList.add('active');
+    tabPanel.querySelectorAll('.subpanel').forEach(p => {
+      p.classList.toggle('active', p.getAttribute('data-subtab') === saved);
+    });
+  });
+}
+
+// v6.28 — Voice tab visual state controller (4 states: idle / recording / parsing / done)
+// Called from existing toggleVoice / voiceFillFields flow without rewriting recorder logic.
+function setVoiceState(state, opts) {
+  opts = opts || {};
+  const btn = document.getElementById('voiceBtn');
+  const statusBadge = document.getElementById('voiceStatusBadge');
+  const status = document.getElementById('voiceStatus');
+  const hint = document.getElementById('voiceHint');
+  const procWrap = document.getElementById('voiceProcessWrap');
+  const procBar = document.getElementById('voiceProcessBar');
+  const procLabel = document.getElementById('voiceProcessLabel');
+  const doneCard = document.getElementById('voiceDoneCard');
+
+  if (!btn) return; // voice card not present (e.g. on New tab) — silently noop
+
+  switch (state) {
+    case 'idle':
+      btn.classList.remove('recording');
+      if (statusBadge) { statusBadge.textContent = 'English · 中文 · Bahasa'; statusBadge.style.color = ''; }
+      if (status) status.textContent = 'Tap to start recording';
+      if (hint) hint.textContent = 'Tap to record · Tap again to stop';
+      if (procWrap) procWrap.style.display = 'none';
+      // doneCard stays — user may want to see last result
+      break;
+    case 'recording':
+      btn.classList.add('recording');
+      if (statusBadge) { statusBadge.textContent = '● Recording' + (opts.duration ? ' · ' + opts.duration : '...'); statusBadge.style.color = 'var(--blue)'; }
+      if (status) status.textContent = 'Listening to you';
+      if (hint) hint.textContent = 'Tap again to stop';
+      if (procWrap) procWrap.style.display = 'none';
+      if (doneCard) doneCard.style.display = 'none';
+      break;
+    case 'parsing':
+      btn.classList.remove('recording');
+      if (statusBadge) { statusBadge.textContent = ''; statusBadge.style.color = ''; }
+      if (status) status.textContent = 'Parsing your voice...';
+      if (hint) hint.textContent = 'AI is matching to fields';
+      if (procWrap) procWrap.style.display = 'block';
+      if (procBar) procBar.style.width = (opts.percent || 30) + '%';
+      if (procLabel) procLabel.textContent = opts.label || 'Processing audio...';
+      if (doneCard) doneCard.style.display = 'none';
+      break;
+    case 'done':
+      btn.classList.remove('recording');
+      if (statusBadge) { statusBadge.textContent = 'English · 中文 · Bahasa'; statusBadge.style.color = ''; }
+      if (status) status.textContent = 'Tap to record again';
+      if (hint) hint.textContent = '';
+      if (procWrap) procWrap.style.display = 'none';
+      if (doneCard) {
+        doneCard.style.display = 'block';
+        const cnt = document.getElementById('voiceDoneCount');
+        const tx  = document.getElementById('voiceDoneTranscript');
+        const fl  = document.getElementById('voiceDoneFields');
+        if (cnt) cnt.textContent = (opts.filledCount || 0) + ' field' + (opts.filledCount === 1 ? '' : 's') + ' auto-filled';
+        if (tx) {
+          if (opts.transcript) {
+            tx.style.display = 'block';
+            tx.textContent = '"' + opts.transcript + '"';
+          } else { tx.style.display = 'none'; }
+        }
+        if (fl && opts.fieldList) {
+          fl.innerHTML = opts.fieldList;
+        }
+      }
+      break;
+  }
+}
 
 // ── Offline Detection ────────────────────────────────────
 function setupOfflineDetection() {
@@ -4147,6 +4466,11 @@ function restoreDrafts() {
 function setupKeyboardHandling() {
   const phoneBar = document.getElementById('phoneBar');
 
+  // v6.26 — Desktop devices (real mouse + hover) don't have soft keyboards,
+  // so phone bar should never auto-hide on focus. Only mobile/touch devices
+  // need this behavior to prevent the bar being obscured by the keyboard.
+  const isDesktop = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+
   function isPhoneBarInput(el) {
     return el && el.id === 'phoneBarInput';
   }
@@ -4167,6 +4491,7 @@ function setupKeyboardHandling() {
     const el = e.target;
     if (!['INPUT','TEXTAREA','SELECT'].includes(el.tagName)) return;
     if (isPhoneBarInput(el)) return; // phone bar stays visible
+    if (isDesktop) return;           // v6.26 — desktop: never auto-hide
     hidePhoneBar();
     // Skip auto-scroll when input is inside a swipe-page (Existing tab's
     // scrollable sub-container) — scrollIntoView would scroll that small box
@@ -4181,6 +4506,7 @@ function setupKeyboardHandling() {
   document.addEventListener('blur', (e) => {
     const el = e.target;
     if (!['INPUT','TEXTAREA','SELECT'].includes(el.tagName)) return;
+    if (isDesktop) return;           // v6.26 — desktop: bar already visible, skip
     setTimeout(() => {
       const active = document.activeElement;
       // If no input is focused or only phone bar is focused
@@ -4191,7 +4517,7 @@ function setupKeyboardHandling() {
   }, true);
 
   // visualViewport: most reliable keyboard detection on mobile
-  if (window.visualViewport) {
+  if (window.visualViewport && !isDesktop) {  // v6.26 — desktop has no soft keyboard
     const initialHeight = window.visualViewport.height;
     window.visualViewport.addEventListener('resize', () => {
       const currentHeight = window.visualViewport.height;
@@ -4945,7 +5271,9 @@ async function startVoiceModal() {
 
     // 更新主页按钮状态
     const btn = document.getElementById('voiceBtn');
-    if (btn) { btn.classList.add('recording'); btn.style.background='#c0392b'; btn.style.borderColor='#c0392b'; btn.style.color='#fff'; }
+    if (btn) { btn.classList.add('recording'); }
+    // v6.28 — also update the inline Voice card visual state (mobile sub-tab redesign)
+    if (typeof setVoiceState === 'function') setVoiceState('recording');
 
     // Dots 动画
     let d = 0;
@@ -4982,7 +5310,9 @@ async function startVoiceModal() {
       clearInterval(_secTimer);
       clearInterval(_dotsTimer);
       const btn = document.getElementById('voiceBtn');
-      if (btn) { btn.classList.remove('recording'); btn.style.background='transparent'; btn.style.borderColor='var(--blue)'; btn.style.color='var(--blue)'; }
+      if (btn) { btn.classList.remove('recording'); btn.style.background=''; btn.style.borderColor=''; btn.style.color=''; }
+      // v6.28 — switch to parsing state
+      if (typeof setVoiceState === 'function') setVoiceState('parsing', { percent: 30, label: 'Transcribing audio...' });
 
       if (_audioChunks.length === 0) { closeVoiceModal(); return; }
 
@@ -5204,6 +5534,36 @@ Rules: Translate Chinese/Malay to English. Keep values concise. Return JSON only
     setTimeout(() => { if (wrap) { wrap.style.display = 'none'; if (bar) bar.style.width = '0%'; } }, 800);
     document.getElementById('voiceStatus').textContent = `✓ ${filled} field${filled !== 1 ? 's' : ''} filled`;
     showToast(`✓ ${filled} fields auto-filled`);
+
+    // v6.28 — switch Voice tab to "done" state (mobile sub-tab redesign)
+    if (typeof setVoiceState === 'function') {
+      // Build a short summary list (top 5 filled fields)
+      const fieldLabels = {
+        'note-problem-existing':'Problem','note-septum-existing':'Septum',
+        'note-right-nasal-existing':'Right Nasal','note-right-septum-existing':'Right Septum',
+        'note-right-turb-existing':'Right Turbinate','note-right-swell-existing':'Right Swelling',
+        'note-right-breath-existing':'Right Breathing','note-left-nasal-existing':'Left Nasal',
+        'note-left-septum-existing':'Left Septum','note-left-turb-existing':'Left Turbinate',
+        'note-left-swell-existing':'Left Swelling','note-left-breath-existing':'Left Breathing',
+        'note-obs-notes-existing':'Obs Notes','note-procedure-existing':'Procedure',
+        'note-sneezing-th-existing':'Sneezing','note-mucusth-existing':'Mucus',
+        'note-afterth-existing':'After Therapy','note-therapy-notes-ex-existing':'Therapy Notes',
+        'note-medication-existing':'Medication','note-next-existing':'Next Session',
+        'note-advices-existing':'Advices'
+      };
+      const filledEntries = Object.entries(parsed).filter(([id,v]) => v && document.getElementById(id));
+      const top5 = filledEntries.slice(0, 5);
+      const more = filledEntries.length > 5 ? `<br><span style="color:var(--text3);">+ ${filledEntries.length - 5} more...</span>` : '';
+      const escapeHtml = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      const fieldList = top5.map(([id, v]) =>
+        `✓ ${fieldLabels[id] || id.replace('note-','').replace('-existing','')}: <strong>${escapeHtml(v)}</strong>`
+      ).join('<br>') + more;
+      setVoiceState('done', {
+        filledCount: filled,
+        transcript: text,
+        fieldList: fieldList
+      });
+    }
 
   } catch(e) {
     if (wrap) wrap.style.display = 'none';
